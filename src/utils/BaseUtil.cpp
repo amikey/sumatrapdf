@@ -3,6 +3,12 @@
 
 #include "BaseUtil.h"
 
+#ifndef _WIN32
+inline void ZeroMemory(void *p, size_t n) {
+    memset(p, 0, n);
+}
+#endif
+
 void *Allocator::Alloc(Allocator *a, size_t size) {
     if (!a)
         return malloc(size);
@@ -40,10 +46,11 @@ char *Allocator::StrDup(Allocator *a, const char *str) {
     return str ? (char *)Dup(a, str, strlen(str) + 1) : nullptr;
 }
 
+#ifdef _WIN32
 WCHAR *Allocator::StrDup(Allocator *a, const WCHAR *str) {
     return str ? (WCHAR *)Dup(a, str, (wcslen(str) + 1) * sizeof(WCHAR)) : nullptr;
 }
-
+#endif
 
 void PoolAllocator::Init() {
     currBlock = nullptr;

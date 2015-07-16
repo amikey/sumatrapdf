@@ -4,32 +4,8 @@
 #ifndef BaseUtil_h
 #define BaseUtil_h
 
-#ifndef UNICODE
-#define UNICODE
-#endif
-#ifndef _UNICODE
-#define _UNICODE
-#endif
-
-#include <windows.h>
-#include <unknwn.h>
-#include <shlwapi.h>
-#include <shlobj.h>
-#include <commctrl.h>
-#include <windowsx.h>
-#include <winsafer.h>
-#include <gdiplus.h>
-
-#ifdef min
-#undef min
-#endif
-
-#ifdef max
-#undef max
-#endif
-
-#ifdef DEBUG
-#define _CRTDBG_MAP_ALLOC
+#ifdef _WIN32
+#include "BaseUtil_win.h"
 #endif
 
 #include <algorithm>
@@ -52,9 +28,8 @@
 #include <stdint.h>
 #include <time.h>
 #include <locale.h>
-#include <malloc.h>
-#include <io.h>
 #include <fcntl.h>
+#include <limits.h>
 
 #define _USE_MATH_DEFINES
 #include <math.h>
@@ -65,6 +40,13 @@
 
 #include <functional>
 #include <memory>
+
+// TODO: should this be #ifndef _MSC_VER ? I think clang sets _MSC_VER in ms-compat
+// mode (-fms-compatibility-version and -fmsc-version) but not sure if it defines
+// __analysis_assume
+#ifndef _WIN32
+#define __analysis_assume(x) ((void)0)
+#endif
 
 template <typename T>
 inline T *AllocArray(size_t n)
@@ -235,7 +217,9 @@ public:
     static void* Realloc(Allocator *a, void *mem, size_t size);
     static void *Dup(Allocator *a, const void *mem, size_t size, size_t padding=0);
     static char *StrDup(Allocator *a, const char *str);
+#ifdef _WIN32
     static WCHAR *StrDup(Allocator *a, const WCHAR *str);
+#endif
 };
 
 // PoolAllocator is for the cases where we need to allocate pieces of memory
@@ -376,34 +360,5 @@ public:
 #include "Scoped.h"
 #include "StrUtil.h"
 #include "Vec.h"
-
-/* In debug mode, VS 2010 instrumentations complains about GetRValue() etc.
-This adds equivalent functions that don't have this problem and ugly
-substitutions to make sure we don't use Get*Value() in the future */
-
-static inline BYTE GetRValueSafe(COLORREF rgb)
-{
-    rgb = rgb & 0xff;
-    return (BYTE)rgb;
-}
-
-static inline BYTE GetGValueSafe(COLORREF rgb)
-{
-    rgb = (rgb >> 8) & 0xff;
-    return (BYTE)rgb;
-}
-
-static inline BYTE GetBValueSafe(COLORREF rgb)
-{
-    rgb = (rgb >> 16) & 0xff;
-    return (BYTE)rgb;
-}
-
-#undef GetRValue
-#define GetRValue UseGetRValueSafeInstead
-#undef GetGValue
-#define GetGValue UseGetGValueSafeInstead
-#undef GetBValue
-#define GetBValue UseGetBValueSafeInstead
 
 #endif
