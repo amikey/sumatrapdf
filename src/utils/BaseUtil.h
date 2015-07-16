@@ -5,6 +5,20 @@
 #define BaseUtil_h
 
 #ifdef _WIN32
+#if !defined(BUILD_FOR_WIN32) && !defined(BUILD_FOR_UNIX) && !defined(BUILD_FOR_MAC)
+    #if defined(WIN32)
+        #define BUILD_FOR_WIN32
+    #elif defined(linux) || defined(__FreeBSD__) || defined(__OpenBSD__) || \
+          defined(__sun) || defined(__NetBSD__) || defined(__DragonFly__) || \
+          defined(__GLIBC__) || defined(__GNU__)
+        #define BUILD_FOR_UNIX
+        #error "UNIX build not supported yet"
+    #else
+        #define BUILD_FOR_MAC
+    #endif
+#endif
+
+#if defined(BUILD_FOR_WIN32)
 #include "BaseUtil_win.h"
 #endif
 
@@ -44,7 +58,7 @@
 // TODO: should this be #ifndef _MSC_VER ? I think clang sets _MSC_VER in ms-compat
 // mode (-fms-compatibility-version and -fmsc-version) but not sure if it defines
 // __analysis_assume
-#ifndef _WIN32
+#if !defined(BUILD_FOR_WIN32)
 #define __analysis_assume(x) ((void)0)
 #endif
 
@@ -217,7 +231,7 @@ public:
     static void* Realloc(Allocator *a, void *mem, size_t size);
     static void *Dup(Allocator *a, const void *mem, size_t size, size_t padding=0);
     static char *StrDup(Allocator *a, const char *str);
-#ifdef _WIN32
+#if defined(BUILD_FOR_WIN32)
     static WCHAR *StrDup(Allocator *a, const WCHAR *str);
 #endif
 };

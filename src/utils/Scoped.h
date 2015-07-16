@@ -52,7 +52,7 @@ public:
     }
 };
 
-#ifdef _WIN32
+#if defined(BUILD_FOR_WIN32)
 #include "Scoped_win.h"
 #endif
 

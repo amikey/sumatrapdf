@@ -391,7 +391,7 @@ public:
 
 } // namespace str
 
-#ifdef _WIN32
+#if defined(BUILD_FOR_WIN32)
 #include "Vec_win.h"
 #endif
 
