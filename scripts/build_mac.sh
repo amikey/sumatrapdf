@@ -13,6 +13,7 @@ function build() {
 	rm -rf $DST_DIR
 	mkdir -p $DST_DIR
 	clang++ -std=c++11 -g -c src/utils/BaseUtil.cpp -Isrc/utils -o $DST_DIR/BaseUtil.o
+	clang++ -std=c++11 -g -c src/utils/StrUtil.cpp -Isrc/utils -o $DST_DIR/StrUtil.o
 	clang++ -std=c++11 -g -c src/mac/main.cpp -Isrc/utils -o $DST_DIR/mac.o
 	clang++ -g $DST_DIR/*.o -o $DST_DIR/mac_main
 	./$DST_DIR/mac_main

@@ -102,12 +102,6 @@ bool    HexToMem(const char *s, unsigned char *buf, size_t bufLen);
 const char  *   Parse(const char *str, const char *format, ...);
 const char  *   Parse(const char *str, size_t len, const char *format, ...);
 
-namespace conv {
-
-char *          UnknownToUtf8(const char *src, size_t len = 0);
-
-} // namespace str::conv
-
 }  // namespace str
 
 namespace url {

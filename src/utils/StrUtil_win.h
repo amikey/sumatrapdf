@@ -83,8 +83,10 @@ inline char *   ToUtf8(const WCHAR *src, size_t cchSrcLen) { return ToMultiByte(
 inline char *   ToUtf8(const WCHAR *src) { return ToMultiByte(src, CP_UTF8); }
 inline WCHAR *  FromAnsi(const char *src, size_t cbSrcLen=(size_t)-1) { return ToWideChar(src, CP_ACP, (int)cbSrcLen); }
 inline char *   ToAnsi(const WCHAR *src) { return ToMultiByte(src, CP_ACP); }
-size_t ToCodePageBuf(char *buf, int cbBufSize, const WCHAR *s, UINT cp);
-size_t FromCodePageBuf(WCHAR *buf, int cchBufSize, const char *s, UINT cp);
+char *          UnknownToUtf8(const char *src, size_t len = 0);
+
+size_t          ToCodePageBuf(char *buf, int cbBufSize, const WCHAR *s, UINT cp);
+size_t          FromCodePageBuf(WCHAR *buf, int cchBufSize, const char *s, UINT cp);
 
 } // namespace str::conv
 

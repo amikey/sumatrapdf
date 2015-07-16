@@ -22,6 +22,10 @@
 #include "BaseUtil_win.h"
 #endif
 
+#if defined(BUILD_FOR_MAX)
+#include <errno.h>
+#endif
+
 #include <algorithm>
 #include <stdlib.h>
 
