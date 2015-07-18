@@ -164,7 +164,7 @@ public:
     PointT<T> BR() const { return PointT<T>(x + dx, y + dy); }
     SizeT<T> Size() const { return SizeT<T>(dx, dy); }
 
-#ifdef _WIN32
+#if defined(OS_WIN)
     RECT ToRECT() const {
         RectT<int> rectI(this->ToInt());
         RECT result = { rectI.x, rectI.y, rectI.x + rectI.dx, rectI.y + rectI.dy };
@@ -206,7 +206,7 @@ typedef geomutil::PointT<double> PointD;
 typedef geomutil::RectT<int> RectI;
 typedef geomutil::RectT<double> RectD;
 
-#ifdef _WIN32
+#if defined(OS_WIN)
 
 class ClientRect : public RectI {
 public:

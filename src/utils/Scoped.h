@@ -52,7 +52,7 @@ public:
     }
 };
 
-#if defined(BUILD_FOR_WIN32)
+#if defined(OS_WIN)
 #include "Scoped_win.h"
 #endif
 

@@ -125,6 +125,6 @@ const char * IdxToStr(const char *strings, int idx);
 #define UTF16_BOM   "\xFF\xFE"
 #define UTF16BE_BOM "\xFE\xFF"
 
-#if defined(BUILD_FOR_WIN32)
+#if defined(OS_WIN)
 #include "StrUtil_win.h"
 #endif

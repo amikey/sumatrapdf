@@ -4,7 +4,7 @@
 /* The most basic things, including string handling functions */
 #include "BaseUtil.h"
 
-#if defined(BUILD_FOR_MAC)
+#if defined(OS_MAC)
 
 inline char *_strdup(const char *s) {
     return strdup(s);
