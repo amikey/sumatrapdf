@@ -819,3 +819,5 @@ const char *IdxToStr(const char *strings, int idx)
 }
 
 } // namespace seqstrings
+
+#include "StrUtil_win.cpp"

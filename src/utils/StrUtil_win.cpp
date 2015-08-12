@@ -762,4 +762,3 @@ int StrToIdx(const char *strings, const WCHAR *toFind)
 }
 
 } // namespace seqstrings
-
