@@ -230,6 +230,11 @@ protected:
        zoomVirtual * 0.01 * dpiFactor
        except for ZOOM_FIT_PAGE, ZOOM_FIT_WIDTH and ZOOM_FIT_CONTENT */
     float           zoomReal;
+
+    // for continuous mode & FIT_WIDTH, real zoom for each page. TODO: could be
+    // part of PageInfo instead?ss
+    float *         zoomRealPages;
+
     float           zoomVirtual;
     int             rotation;
     /* dpi correction factor by which _zoomVirtual has to be multiplied in
