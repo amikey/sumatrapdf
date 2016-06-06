@@ -275,6 +275,9 @@ public:
     // access to various document properties (such as Author, Title, etc.)
     virtual WCHAR *GetProperty(DocumentProperty prop) = 0;
 
+    // get all properties as array of name/value pairs
+    virtual std::vector<std::wstring> GetProperties() = 0;
+
     // TODO: generalize from PageAnnotation to PageModification
     // whether this engine supports adding user annotations of all available types
     // (either for rendering or for saving)

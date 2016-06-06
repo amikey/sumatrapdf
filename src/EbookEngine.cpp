@@ -68,48 +68,48 @@ public:
 class EbookEngine : public BaseEngine {
 public:
     EbookEngine();
-    virtual ~EbookEngine();
+    ~EbookEngine() override;
 
-    virtual const WCHAR *FileName() const { return fileName; };
-    virtual int PageCount() const { return pages ? (int)pages->Count() : 0; }
+    const WCHAR *FileName() const override { return fileName; };
+    int PageCount() const override { return pages ? (int)pages->Count() : 0; }
 
-    virtual RectD PageMediabox(int pageNo) { UNUSED(pageNo);  return pageRect; }
-    virtual RectD PageContentBox(int pageNo, RenderTarget target=Target_View) {
+    RectD PageMediabox(int pageNo) override { UNUSED(pageNo);  return pageRect; }
+    RectD PageContentBox(int pageNo, RenderTarget target=Target_View) override {
         UNUSED(target);
         RectD mbox = PageMediabox(pageNo);
         mbox.Inflate(-pageBorder, -pageBorder);
         return mbox;
     }
 
-    virtual RenderedBitmap *RenderBitmap(int pageNo, float zoom, int rotation,
+    RenderedBitmap *RenderBitmap(int pageNo, float zoom, int rotation,
                          RectD *pageRect=nullptr, /* if nullptr: defaults to the page's mediabox */
-                         RenderTarget target=Target_View, AbortCookie **cookie_out=nullptr);
+                         RenderTarget target=Target_View, AbortCookie **cookie_out=nullptr) override;
 
-    virtual PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse=false);
-    virtual RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse=false);
+    PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse=false) override;
+    RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse=false) override;
 
-    virtual unsigned char *GetFileData(size_t *cbCount) {
+    unsigned char *GetFileData(size_t *cbCount)  override {
         return fileName ? (unsigned char *)file::ReadAll(fileName, cbCount) : nullptr;
     }
-    virtual bool SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots=false) {
+    bool SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots=false)  override {
         UNUSED(includeUserAnnots);
         return fileName ? CopyFile(fileName, copyFileName, FALSE) : false;
     }
-    virtual WCHAR * ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **coordsOut=nullptr,
-                                    RenderTarget target=Target_View);
+    WCHAR * ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **coordsOut=nullptr,
+                                    RenderTarget target=Target_View) override;
     // make RenderCache request larger tiles than per default
-    virtual bool HasClipOptimizations(int pageNo) { UNUSED(pageNo);  return false; }
-    virtual PageLayoutType PreferredLayout() { return Layout_Book; }
+    bool HasClipOptimizations(int pageNo)  override { UNUSED(pageNo);  return false; }
+    PageLayoutType PreferredLayout()  override { return Layout_Book; }
 
-    virtual bool SupportsAnnotation(bool forSaving=false) const { return !forSaving; }
-    virtual void UpdateUserAnnotations(Vec<PageAnnotation> *list);
+    bool SupportsAnnotation(bool forSaving=false) const override { return !forSaving; }
+    void UpdateUserAnnotations(Vec<PageAnnotation> *list) override;
 
-    virtual Vec<PageElement *> *GetElements(int pageNo);
-    virtual PageElement *GetElementAtPos(int pageNo, PointD pt);
+    Vec<PageElement *> *GetElements(int pageNo) override;
+    PageElement *GetElementAtPos(int pageNo, PointD pt) override;
 
-    virtual PageDestination *GetNamedDest(const WCHAR *name);
+    PageDestination *GetNamedDest(const WCHAR *name) override;
 
-    virtual bool BenchLoadPage(int pageNo) { UNUSED(pageNo); return true; }
+    bool BenchLoadPage(int pageNo) override { UNUSED(pageNo); return true; }
 
 protected:
     WCHAR *fileName;
@@ -154,10 +154,10 @@ public:
     SimpleDest2(int pageNo, RectD rect, WCHAR *value=nullptr) :
         pageNo(pageNo), rect(rect), value(value) { }
 
-    virtual PageDestType GetDestType() const { return value ? Dest_LaunchURL : Dest_ScrollTo; }
-    virtual int GetDestPageNo() const { return pageNo; }
-    virtual RectD GetDestRect() const { return rect; }
-    virtual WCHAR *GetDestValue() const { return str::Dup(value); }
+    PageDestType GetDestType() const override { return value ? Dest_LaunchURL : Dest_ScrollTo; }
+    int GetDestPageNo() const override { return pageNo; }
+    RectD GetDestRect() const override { return rect; }
+    WCHAR *GetDestValue() const override { return str::Dup(value); }
 };
 
 class EbookLink : public PageElement, public PageDestination {
@@ -711,25 +711,21 @@ public:
 class EpubEngineImpl : public EbookEngine {
 public:
     EpubEngineImpl() : EbookEngine(), doc(nullptr), stream(nullptr) { }
-    virtual ~EpubEngineImpl();
-    virtual BaseEngine *Clone() {
-        if (stream)
-            return CreateFromStream(stream);
-        return fileName ? CreateFromFile(fileName) : nullptr;
-    }
+    ~EpubEngineImpl() override;
+    BaseEngine *Clone() override;
 
-    virtual unsigned char *GetFileData(size_t *cbCount);
-    virtual bool SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots=false);
+    unsigned char *GetFileData(size_t *cbCount) override;
+    bool SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots=false) override;
 
-    virtual PageLayoutType PreferredLayout();
+    PageLayoutType PreferredLayout() override;
 
-    virtual WCHAR *GetProperty(DocumentProperty prop) {
-        return prop != Prop_FontList ? doc->GetProperty(prop) : ExtractFontList();
-    }
-    virtual const WCHAR *GetDefaultFileExt() const { return L".epub"; }
+    WCHAR *GetProperty(DocumentProperty prop) override;
+    std::vector<std::wstring> GetProperties() override { CrashMe(); return std::vector<std::wstring>(); }
 
-    virtual bool HasTocTree() const { return doc->HasToc(); }
-    virtual DocTocItem *GetTocTree();
+    const WCHAR *GetDefaultFileExt() const override { return L".epub"; }
+
+    bool HasTocTree() const override { return doc->HasToc(); }
+    DocTocItem *GetTocTree() override;
 
     static BaseEngine *CreateFromFile(const WCHAR *fileName);
     static BaseEngine *CreateFromStream(IStream *stream);
@@ -742,6 +738,12 @@ protected:
     bool Load(IStream *stream);
     bool FinishLoading();
 };
+
+BaseEngine *EpubEngineImpl::Clone() {
+    if (stream)
+        return CreateFromStream(stream);
+    return fileName ? CreateFromFile(fileName) : nullptr;
+}
 
 EpubEngineImpl::~EpubEngineImpl()
 {
@@ -762,6 +764,10 @@ bool EpubEngineImpl::Load(const WCHAR *fileName)
     }
     doc = EpubDoc::CreateFromFile(fileName);
     return FinishLoading();
+}
+
+WCHAR *EpubEngineImpl::GetProperty(DocumentProperty prop) {
+    return prop != Prop_FontList ? doc->GetProperty(prop) : ExtractFontList();
 }
 
 bool EpubEngineImpl::Load(IStream *stream)
@@ -884,20 +890,18 @@ BaseEngine *CreateFromStream(IStream *stream)
 class Fb2EngineImpl : public EbookEngine {
 public:
     Fb2EngineImpl() : EbookEngine(), doc(nullptr) { }
-    virtual ~Fb2EngineImpl() { delete doc; }
-    virtual BaseEngine *Clone() {
-        return fileName ? CreateFromFile(fileName) : nullptr;
-    }
+    ~Fb2EngineImpl() override { delete doc; }
+    BaseEngine *Clone() override;
 
-    virtual WCHAR *GetProperty(DocumentProperty prop) {
-        return prop != Prop_FontList ? doc->GetProperty(prop) : ExtractFontList();
-    }
-    virtual const WCHAR *GetDefaultFileExt() const {
+    WCHAR *GetProperty(DocumentProperty prop) override;
+    std::vector<std::wstring> GetProperties() override;
+
+    const WCHAR *GetDefaultFileExt() const override {
         return doc->IsZipped() ? L".fb2z" : L".fb2";
     }
 
-    virtual bool HasTocTree() const { return doc->HasToc(); }
-    virtual DocTocItem *GetTocTree();
+    bool HasTocTree() const override { return doc->HasToc(); }
+    DocTocItem *GetTocTree() override;
 
     static BaseEngine *CreateFromFile(const WCHAR *fileName);
     static BaseEngine *CreateFromStream(IStream *stream);
@@ -909,6 +913,19 @@ protected:
     bool Load(IStream *stream);
     bool FinishLoading();
 };
+
+BaseEngine *Fb2EngineImpl::Clone() {
+    return fileName ? CreateFromFile(fileName) : nullptr;
+}
+
+WCHAR *Fb2EngineImpl::GetProperty(DocumentProperty prop) {
+    return prop != Prop_FontList ? doc->GetProperty(prop) : ExtractFontList();
+}
+
+std::vector<std::wstring> Fb2EngineImpl::GetProperties() {
+    CrashMe();
+    return std::vector<std::wstring>();
+}
 
 bool Fb2EngineImpl::Load(const WCHAR *fileName)
 {
@@ -1000,19 +1017,17 @@ BaseEngine *CreateFromStream(IStream *stream)
 class MobiEngineImpl : public EbookEngine {
 public:
     MobiEngineImpl() : EbookEngine(), doc(nullptr) { }
-    virtual ~MobiEngineImpl() { delete doc; }
-    virtual BaseEngine *Clone() {
-        return fileName ? CreateFromFile(fileName) : nullptr;
-    }
+    ~MobiEngineImpl() override { delete doc; }
+    BaseEngine *Clone() override;
 
-    virtual WCHAR *GetProperty(DocumentProperty prop) {
-        return prop != Prop_FontList ? doc->GetProperty(prop) : ExtractFontList();
-    }
-    virtual const WCHAR *GetDefaultFileExt() const { return L".mobi"; }
+    WCHAR *GetProperty(DocumentProperty prop) override;
+    std::vector<std::wstring> GetProperties() override;
 
-    virtual PageDestination *GetNamedDest(const WCHAR *name);
-    virtual bool HasTocTree() const { return doc->HasToc(); }
-    virtual DocTocItem *GetTocTree();
+    const WCHAR *GetDefaultFileExt() const override { return L".mobi"; }
+
+    PageDestination *GetNamedDest(const WCHAR *name) override;
+    bool HasTocTree() const override { return doc->HasToc(); }
+    DocTocItem *GetTocTree() override;
 
     static BaseEngine *CreateFromFile(const WCHAR *fileName);
     static BaseEngine *CreateFromStream(IStream *stream);
@@ -1024,6 +1039,19 @@ protected:
     bool Load(IStream *stream);
     bool FinishLoading();
 };
+
+BaseEngine *MobiEngineImpl::Clone() {
+    return fileName ? CreateFromFile(fileName) : nullptr;
+}
+
+WCHAR *MobiEngineImpl::GetProperty(DocumentProperty prop) {
+    return prop != Prop_FontList ? doc->GetProperty(prop) : ExtractFontList();
+}
+
+std::vector<std::wstring> MobiEngineImpl::GetProperties() {
+    CrashMe();
+    return std::vector<std::wstring>();
+}
 
 bool MobiEngineImpl::Load(const WCHAR *fileName)
 {
@@ -1148,18 +1176,16 @@ BaseEngine *CreateFromStream(IStream *stream)
 class PdbEngineImpl : public EbookEngine {
 public:
     PdbEngineImpl() : EbookEngine(), doc(nullptr) { }
-    virtual ~PdbEngineImpl() { delete doc; }
-    virtual BaseEngine *Clone() {
-        return fileName ? CreateFromFile(fileName) : nullptr;
-    }
+    ~PdbEngineImpl() override { delete doc; }
+    BaseEngine *Clone() override;
 
-    virtual WCHAR *GetProperty(DocumentProperty prop) {
-        return prop != Prop_FontList ? doc->GetProperty(prop) : ExtractFontList();
-    }
-    virtual const WCHAR *GetDefaultFileExt() const { return L".pdb"; }
+    WCHAR *GetProperty(DocumentProperty prop) override;
+    std::vector<std::wstring> GetProperties() override;
 
-    virtual bool HasTocTree() const { return doc->HasToc(); }
-    virtual DocTocItem *GetTocTree();
+    const WCHAR *GetDefaultFileExt() const override { return L".pdb"; }
+
+    bool HasTocTree() const override { return doc->HasToc(); }
+    DocTocItem *GetTocTree() override;
 
     static BaseEngine *CreateFromFile(const WCHAR *fileName);
 
@@ -1168,6 +1194,19 @@ protected:
 
     bool Load(const WCHAR *fileName);
 };
+
+BaseEngine *PdbEngineImpl::Clone() {
+    return fileName ? CreateFromFile(fileName) : nullptr;
+}
+
+WCHAR *PdbEngineImpl::GetProperty(DocumentProperty prop) {
+    return prop != Prop_FontList ? doc->GetProperty(prop) : ExtractFontList();
+}
+
+std::vector<std::wstring> PdbEngineImpl::GetProperties() {
+    CrashMe();
+    return std::vector<std::wstring>();
+}
 
 bool PdbEngineImpl::Load(const WCHAR *fileName)
 {
@@ -1235,45 +1274,53 @@ class ChmDataCache {
 
 public:
     ChmDataCache(ChmDoc *doc, char *html) : doc(doc), html(html) { }
-    ~ChmDataCache() {
-        for (size_t i = 0; i < images.Count(); i++) {
-            free(images.At(i).base.data);
-            free(images.At(i).id);
-        }
-    }
+    ~ChmDataCache();
 
-    const char *GetHtmlData(size_t *lenOut) {
-        *lenOut = str::Len(html);
-        return html;
-    }
+    const char *GetHtmlData(size_t *lenOut);
 
-    ImageData *GetImageData(const char *id, const char *pagePath) {
-        ScopedMem<char> url(NormalizeURL(id, pagePath));
-        for (size_t i = 0; i < images.Count(); i++) {
-            if (str::Eq(images.At(i).id, url))
-                return &images.At(i).base;
-        }
+    ImageData *GetImageData(const char *id, const char *pagePath);
 
-        ImageData2 data = { 0 };
-        data.base.data = (char *)doc->GetData(url, &data.base.len);
-        if (!data.base.data)
-            return nullptr;
-        data.id = url.StealData();
-        images.Append(data);
-        return &images.Last().base;
-    }
-
-    char *GetFileData(const char *relPath, const char *pagePath, size_t *lenOut) {
-        ScopedMem<char> url(NormalizeURL(relPath, pagePath));
-        return (char *)doc->GetData(url, lenOut);
-    }
+    char *GetFileData(const char *relPath, const char *pagePath, size_t *lenOut);
 };
+
+ChmDataCache::~ChmDataCache() {
+    for (size_t i = 0; i < images.Count(); i++) {
+        free(images.At(i).base.data);
+        free(images.At(i).id);
+    }
+}
+
+const char *ChmDataCache::GetHtmlData(size_t *lenOut) {
+    *lenOut = str::Len(html);
+    return html;
+}
+
+ImageData *ChmDataCache::GetImageData(const char *id, const char *pagePath) {
+    ScopedMem<char> url(NormalizeURL(id, pagePath));
+    for (size_t i = 0; i < images.Count(); i++) {
+        if (str::Eq(images.At(i).id, url))
+            return &images.At(i).base;
+    }
+
+    ImageData2 data = { 0 };
+    data.base.data = (char *)doc->GetData(url, &data.base.len);
+    if (!data.base.data)
+        return nullptr;
+    data.id = url.StealData();
+    images.Append(data);
+    return &images.Last().base;
+}
+
+char *ChmDataCache::GetFileData(const char *relPath, const char *pagePath, size_t *lenOut) {
+    ScopedMem<char> url(NormalizeURL(relPath, pagePath));
+    return (char *)doc->GetData(url, lenOut);
+}
 
 class ChmFormatter : public HtmlFormatter {
 protected:
-    virtual void HandleTagImg(HtmlToken *t);
-    virtual void HandleTagPagebreak(HtmlToken *t);
-    virtual void HandleTagLink(HtmlToken *t);
+    void HandleTagImg(HtmlToken *t) override;
+    void HandleTagPagebreak(HtmlToken *t) override;
+    void HandleTagLink(HtmlToken *t) override;
 
     ChmDataCache *chmDoc;
     ScopedMem<char> pagePath;
@@ -1349,24 +1396,19 @@ public:
         // ISO 216 A4 (210mm x 297mm)
         pageRect = RectD(0, 0, 8.27 * GetFileDPI(), 11.693 * GetFileDPI());
     }
-    virtual ~ChmEngineImpl() {
-        delete dataCache;
-        delete doc;
-    }
-    virtual BaseEngine *Clone() {
-        return fileName ? CreateFromFile(fileName) : nullptr;
-    }
+    ~ChmEngineImpl()  override;
+    BaseEngine *Clone()  override;
 
-    virtual WCHAR *GetProperty(DocumentProperty prop) {
-        return prop != Prop_FontList ? doc->GetProperty(prop) : ExtractFontList();
-    }
-    virtual const WCHAR *GetDefaultFileExt() const { return L".chm"; }
+    WCHAR *GetProperty(DocumentProperty prop) override;
+    std::vector<std::wstring> GetProperties() override;
 
-    virtual PageLayoutType PreferredLayout() { return Layout_Single; }
+    const WCHAR *GetDefaultFileExt() const override { return L".chm"; }
 
-    virtual PageDestination *GetNamedDest(const WCHAR *name);
-    virtual bool HasTocTree() const { return doc->HasToc() || doc->HasIndex(); }
-    virtual DocTocItem *GetTocTree();
+    PageLayoutType PreferredLayout() override { return Layout_Single; }
+
+    PageDestination *GetNamedDest(const WCHAR *name) override;
+    bool HasTocTree() const override { return doc->HasToc() || doc->HasIndex(); }
+    DocTocItem *GetTocTree() override;
 
     static BaseEngine *CreateFromFile(const WCHAR *fileName);
 
@@ -1379,6 +1421,24 @@ protected:
     virtual PageElement *CreatePageLink(DrawInstr *link, RectI rect, int pageNo);
     bool SaveEmbedded(LinkSaverUI& saveUI, const char *path);
 };
+
+ChmEngineImpl::~ChmEngineImpl() {
+    delete dataCache;
+    delete doc;
+}
+
+BaseEngine *ChmEngineImpl::Clone() {
+    return fileName ? CreateFromFile(fileName) : nullptr;
+}
+
+WCHAR *ChmEngineImpl::GetProperty(DocumentProperty prop) {
+    return prop != Prop_FontList ? doc->GetProperty(prop) : ExtractFontList();
+}
+
+std::vector<std::wstring> ChmEngineImpl::GetProperties() {
+    CrashMe();
+    return std::vector<std::wstring>();
+}
 
 // cf. http://www.w3.org/TR/html4/charset.html#h-5.2.2
 static UINT ExtractHttpCharset(const char *html, size_t htmlLen)
@@ -1428,49 +1488,53 @@ class ChmHtmlCollector : public EbookTocVisitor {
 public:
     explicit ChmHtmlCollector(ChmDoc *doc) : doc(doc) { }
 
-    char *GetHtml() {
-        // first add the homepage
-        const char *index = doc->GetHomePath();
-        ScopedMem<WCHAR> url(doc->ToStr(index));
-        Visit(nullptr, url, 0);
+    char *GetHtml();
 
-        // then add all pages linked to from the table of contents
-        doc->ParseToc(this);
-
-        // finally add all the remaining HTML files
-        Vec<char *> *paths = doc->GetAllPaths();
-        for (size_t i = 0; i < paths->Count(); i++) {
-            char *path = paths->At(i);
-            if (str::EndsWithI(path, ".htm") || str::EndsWithI(path, ".html")) {
-                if (*path == '/')
-                    path++;
-                url.Set(str::conv::FromUtf8(path));
-                Visit(nullptr, url, -1);
-            }
-        }
-        paths->FreeMembers();
-        delete paths;
-
-        return html.StealData();
-    }
-
-    virtual void Visit(const WCHAR *name, const WCHAR *url, int level) {
-        UNUSED(name); UNUSED(level);
-        if (!url || url::IsAbsolute(url))
-            return;
-        ScopedMem<WCHAR> plainUrl(url::GetFullPath(url));
-        if (added.FindI(plainUrl) != -1)
-            return;
-        ScopedMem<char> urlUtf8(str::conv::ToUtf8(plainUrl));
-        size_t pageHtmlLen;
-        ScopedMem<unsigned char> pageHtml(doc->GetData(urlUtf8, &pageHtmlLen));
-        if (!pageHtml)
-            return;
-        html.AppendFmt("<pagebreak page_path=\"%s\" page_marker />", urlUtf8.Get());
-        html.AppendAndFree(doc->ToUtf8(pageHtml, ExtractHttpCharset((const char *)pageHtml.Get(), pageHtmlLen)));
-        added.Append(plainUrl.StealData());
-    }
+    void Visit(const WCHAR *name, const WCHAR *url, int level) override;
 };
+
+char *ChmHtmlCollector::GetHtml() {
+    // first add the homepage
+    const char *index = doc->GetHomePath();
+    ScopedMem<WCHAR> url(doc->ToStr(index));
+    Visit(nullptr, url, 0);
+
+    // then add all pages linked to from the table of contents
+    doc->ParseToc(this);
+
+    // finally add all the remaining HTML files
+    Vec<char *> *paths = doc->GetAllPaths();
+    for (size_t i = 0; i < paths->Count(); i++) {
+        char *path = paths->At(i);
+        if (str::EndsWithI(path, ".htm") || str::EndsWithI(path, ".html")) {
+            if (*path == '/')
+                path++;
+            url.Set(str::conv::FromUtf8(path));
+            Visit(nullptr, url, -1);
+        }
+    }
+    paths->FreeMembers();
+    delete paths;
+
+    return html.StealData();
+}
+
+void ChmHtmlCollector::Visit(const WCHAR *name, const WCHAR *url, int level) {
+    UNUSED(name); UNUSED(level);
+    if (!url || url::IsAbsolute(url))
+        return;
+    ScopedMem<WCHAR> plainUrl(url::GetFullPath(url));
+    if (added.FindI(plainUrl) != -1)
+        return;
+    ScopedMem<char> urlUtf8(str::conv::ToUtf8(plainUrl));
+    size_t pageHtmlLen;
+    ScopedMem<unsigned char> pageHtml(doc->GetData(urlUtf8, &pageHtmlLen));
+    if (!pageHtml)
+        return;
+    html.AppendFmt("<pagebreak page_path=\"%s\" page_marker />", urlUtf8.Get());
+    html.AppendAndFree(doc->ToUtf8(pageHtml, ExtractHttpCharset((const char *)pageHtml.Get(), pageHtmlLen)));
+    added.Append(plainUrl.StealData());
+}
 
 bool ChmEngineImpl::Load(const WCHAR *fileName)
 {
@@ -1539,12 +1603,12 @@ class ChmEmbeddedDest : public PageDestination {
 public:
     ChmEmbeddedDest(ChmEngineImpl *engine, const char *path) : engine(engine), path(str::Dup(path)) { }
 
-    virtual PageDestType GetDestType() const { return Dest_LaunchEmbedded; }
-    virtual int GetDestPageNo() const { return 0; }
-    virtual RectD GetDestRect() const { return RectD(); }
-    virtual WCHAR *GetDestValue() const { return str::conv::FromUtf8(path::GetBaseName(path)); }
+    PageDestType GetDestType() const override { return Dest_LaunchEmbedded; }
+    int GetDestPageNo() const override { return 0; }
+    RectD GetDestRect() const override { return RectD(); }
+    WCHAR *GetDestValue() const override { return str::conv::FromUtf8(path::GetBaseName(path)); }
 
-    virtual bool SaveEmbedded(LinkSaverUI& saveUI) { return engine->SaveEmbedded(saveUI, path); }
+    bool SaveEmbedded(LinkSaverUI& saveUI) override { return engine->SaveEmbedded(saveUI, path); }
 };
 
 PageElement *ChmEngineImpl::CreatePageLink(DrawInstr *link, RectI rect, int pageNo)
@@ -1606,18 +1670,15 @@ public:
         // ISO 216 A4 (210mm x 297mm)
         pageRect = RectD(0, 0, 8.27 * GetFileDPI(), 11.693 * GetFileDPI());
     }
-    virtual ~HtmlEngineImpl() {
-        delete doc;
-    }
-    virtual BaseEngine *Clone() {
-        return fileName ? CreateFromFile(fileName) : nullptr;
-    }
+    ~HtmlEngineImpl() override;
 
-    virtual WCHAR *GetProperty(DocumentProperty prop) {
-        return prop != Prop_FontList ? doc->GetProperty(prop) : ExtractFontList();
-    }
-    virtual const WCHAR *GetDefaultFileExt() const { return L".html"; }
-    virtual PageLayoutType PreferredLayout() { return Layout_Single; }
+    BaseEngine *Clone() override;
+
+    WCHAR *GetProperty(DocumentProperty prop) override;
+    std::vector<std::wstring> GetProperties() override;
+
+    const WCHAR *GetDefaultFileExt() const  override { return L".html"; }
+    PageLayoutType PreferredLayout()  override { return Layout_Single; }
 
     static BaseEngine *CreateFromFile(const WCHAR *fileName);
 
@@ -1628,6 +1689,23 @@ protected:
 
     virtual PageElement *CreatePageLink(DrawInstr *link, RectI rect, int pageNo);
 };
+
+HtmlEngineImpl::~HtmlEngineImpl() {
+    delete doc;
+}
+
+BaseEngine *HtmlEngineImpl::Clone() {
+    return fileName ? CreateFromFile(fileName) : nullptr;
+}
+
+WCHAR *HtmlEngineImpl::GetProperty(DocumentProperty prop) {
+    return prop != Prop_FontList ? doc->GetProperty(prop) : ExtractFontList();
+}
+
+std::vector<std::wstring> HtmlEngineImpl::GetProperties() {
+    CrashMe();
+    return std::vector<std::wstring>();
+}
 
 bool HtmlEngineImpl::Load(const WCHAR *fileName)
 {
@@ -1667,9 +1745,10 @@ public:
             value.Set(str::Dup(relativeURL));
     }
 
-    virtual PageDestType GetDestType() const { return Dest_LaunchFile; }
-    virtual WCHAR *GetDestName() const { return str::Dup(name); }
+    PageDestType GetDestType() const override { return Dest_LaunchFile; }
+    WCHAR *GetDestName() const override { return str::Dup(name); }
 };
+
 
 PageElement *HtmlEngineImpl::CreatePageLink(DrawInstr *link, RectI rect, int pageNo)
 {
@@ -1716,21 +1795,17 @@ public:
         // ISO 216 A4 (210mm x 297mm)
         pageRect = RectD(0, 0, 8.27 * GetFileDPI(), 11.693 * GetFileDPI());
     }
-    virtual ~TxtEngineImpl() { delete doc; }
-    virtual BaseEngine *Clone() {
-        return fileName ? CreateFromFile(fileName) : nullptr;
-    }
+    ~TxtEngineImpl()  override { delete doc; }
+    BaseEngine *Clone()  override;
 
-    virtual WCHAR *GetProperty(DocumentProperty prop) {
-        return prop != Prop_FontList ? doc->GetProperty(prop) : ExtractFontList();
-    }
-    virtual const WCHAR *GetDefaultFileExt() const {
-        return fileName ? path::GetExt(fileName) : L".txt";
-    }
-    virtual PageLayoutType PreferredLayout() { return Layout_Single; }
+    WCHAR *GetProperty(DocumentProperty prop) override;
+    std::vector<std::wstring> GetProperties() override;
 
-    virtual bool HasTocTree() const { return doc->HasToc(); }
-    virtual DocTocItem *GetTocTree();
+    const WCHAR *GetDefaultFileExt() const  override;
+    PageLayoutType PreferredLayout() override { return Layout_Single; }
+
+    bool HasTocTree() const override { return doc->HasToc(); }
+    DocTocItem *GetTocTree() override;
 
     static BaseEngine *CreateFromFile(const WCHAR *fileName);
 
@@ -1739,6 +1814,23 @@ protected:
 
     bool Load(const WCHAR *fileName);
 };
+
+BaseEngine *TxtEngineImpl::Clone() {
+    return fileName ? CreateFromFile(fileName) : nullptr;
+}
+
+WCHAR *TxtEngineImpl::GetProperty(DocumentProperty prop) {
+    return prop != Prop_FontList ? doc->GetProperty(prop) : ExtractFontList();
+}
+
+std::vector<std::wstring> TxtEngineImpl::GetProperties() {
+    CrashMe();
+    return std::vector<std::wstring>();
+}
+
+const WCHAR *TxtEngineImpl::GetDefaultFileExt() const {
+    return fileName ? path::GetExt(fileName) : L".txt";
+}
 
 bool TxtEngineImpl::Load(const WCHAR *fileName)
 {

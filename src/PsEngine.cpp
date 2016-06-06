@@ -273,6 +273,11 @@ public:
         return pdfEngine->GetProperty(prop);
     }
 
+    std::vector<std::wstring> GetProperties() override {
+        CrashMe();
+        return std::vector<std::wstring>();
+    }
+
     virtual bool SupportsAnnotation(bool forSaving=false) const {
         return !forSaving && pdfEngine->SupportsAnnotation();
     }

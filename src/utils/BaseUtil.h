@@ -67,6 +67,8 @@
 
 #include <functional>
 #include <memory>
+#include <string>
+#include <vector>
 
 template <typename T>
 inline T *AllocArray(size_t n)
