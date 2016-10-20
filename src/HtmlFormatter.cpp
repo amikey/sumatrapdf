@@ -557,7 +557,11 @@ bool HtmlFormatter::FlushCurrLine(bool isParagraphBreak)
         createdPage = true;
     }
     SetYPos(currLineInstr, currY + currLineTopPadding);
-    currY += totalLineDy;
+	currY += totalLineDy;
+	//{{add by jjg
+	const float LINE_HEIGHT = 0.618f; //把行间距调大一些
+	currY += LINE_HEIGHT * CurrLineDy();
+	//}}
 
     DrawInstr link;
     if (currLinkIdx) {
@@ -755,15 +759,18 @@ void HtmlFormatter::EmitTextRun(const char *s, const char *end)
         }
 
         size_t lenThatFits = StringLenForWidth(textMeasure, buf, strLen, pageDx - NewLineX());
+
+        //jjg 注释掉这块,解决中文标点导致的不正常换行问题
         // try to prevent a break in the middle of a word
-        if (iswalnum(buf[lenThatFits])) {
-            for (size_t len = lenThatFits; len > 0; len--) {
-                if (!iswalnum(buf[len-1])) {
-                    lenThatFits = len;
-                    break;
-                }
-            }
-        }
+        //if (iswalnum(buf[lenThatFits])) {
+        //    for (size_t len = lenThatFits; len > 0; len--) {
+        //        if (!iswalnum(buf[len-1])) {
+        //            lenThatFits = len;
+        //            break;
+        //        }
+        //    }
+        //}
+
         textMeasure->SetFont(CurrFont());
         bbox = textMeasure->Measure(buf, lenThatFits);
         CrashIf(bbox.Width > pageDx);
